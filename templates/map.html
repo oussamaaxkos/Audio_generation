@@ -1,0 +1,32 @@
+
+{% if location %}
+<h2>You are in {{ location.city }}, {{ location.region }}, {{ location.country }}</h2>
+<div id="map" data-lat="{{ location.latitude }}" data-lon="{{ location.longitude }}" data-city="{{ location.city }}" data-country="{{ location.country }}"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([0, 0], 2);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    var mapDiv = document.getElementById('map');
+    var lat = parseFloat(mapDiv.dataset.lat);
+    var lon = parseFloat(mapDiv.dataset.lon);
+    var city = mapDiv.dataset.city;
+    var country = mapDiv.dataset.country;
+
+    setTimeout(function () {
+        map.flyTo([lat, lon], 13, {
+            animate: true,
+            duration: 2
+        });
+
+        L.marker([lat, lon]).addTo(map)
+            .bindPopup("You are here: " + city + ", " + country)
+            .openPopup();
+    }, 1000);
+</script>
+{% endif %}

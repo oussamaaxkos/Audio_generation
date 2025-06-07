@@ -1,0 +1,449 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Stem Separator</title>
+    <style>
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #111;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #00f7ff;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            border: 2px dashed #444;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-container:hover {
+            border-color: #00f7ff;
+        }
+
+        .upload-container.drag-over {
+            background-color: rgba(0, 247, 255, 0.1);
+            border-color: #00f7ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background-color: #00f7ff;
+            color: #000;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            text-align: center;
+            color: #ccc;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #222;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(90deg, #00f7ff, #0088ff);
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .status {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #00f7ff;
+        }
+
+        .error {
+            color: #ff4d4d;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results h2 {
+            color: #00f7ff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .stems {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .stem {
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stem h3 {
+            color: #00f7ff;
+            margin-top: 0;
+        }
+
+        .stem audio {
+            width: 100%;
+            margin-top: 15px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        .download-btn {
+            background-color: #00f7ff;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #00c8ff;
+            transform: translateY(-2px);
+        }
+
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #00f7ff;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #00f7ff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Audio Stem Separator</h1>
+        
+        <div class="upload-container" id="dropArea">
+            <div class="icon">🎵</div>
+            <p>Drag &amp; drop your audio file here</p>
+            <p>or</p>
+            <input type="file" id="fileInput" class="file-input" accept=".mp3,.wav,.flac,.ogg">
+            <button class="upload-btn" id="browseBtn">Browse Files</button>
+            <div class="file-info" id="fileInfo"></div>
+        </div>
+        
+        <button class="upload-btn" id="uploadBtn" style="display: none; width: 100%;">Start Processing</button>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="loading" id="loadingSpinner"></div>
+        <div class="status" id="statusText"></div>
+        
+        <div class="results" id="resultsContainer">
+            <h2>Separated Stems</h2>
+            <div class="stems" id="stemsContainer">
+                <!-- Stems will be added here -->
+            </div>
+        </div>  
+    </div>
+    
+    <footer>
+        Powered by Osama Akeskous | Audio Stem Separator &copy; 2025
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const browseBtn = document.getElementById('browseBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInfo = document.getElementById('fileInfo');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const statusText = document.getElementById('statusText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const stemsContainer = document.getElementById('stemsContainer');
+            
+            let selectedFile = null;
+            let currentJobId = null;
+            let statusCheckInterval = null;
+            
+            // File selection via browse button
+            browseBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFileSelection(e.target.files[0]);
+            });
+            
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('drag-over');
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('drag-over');
+            }
+            
+            dropArea.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                handleFileSelection(file);
+            });
+            
+            function handleFileSelection(file) {
+                if (!file) return;
+                
+                const validTypes = ['.mp3', '.wav', '.flac', '.ogg', 'audio/mpeg', 'audio/wav', 'audio/flac', 'audio/ogg'];
+                const fileType = file.type || '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (!validTypes.some(type => fileType.includes(type))) {
+                    fileInfo.textContent = 'Error: Please select a valid audio file (MP3, WAV, FLAC, OGG)';
+                    fileInfo.className = 'file-info error';
+                    uploadBtn.style.display = 'none';
+                    return;
+                }
+                
+                selectedFile = file;
+                fileInfo.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+                fileInfo.className = 'file-info';
+                uploadBtn.style.display = 'block';
+            }
+            
+            uploadBtn.addEventListener('click', uploadFile);
+            
+            function uploadFile() {
+                if (!selectedFile) return;
+                
+                // Reset UI
+                progressBar.style.width = '0%';
+                progressContainer.style.display = 'block';
+                loadingSpinner.style.display = 'block';
+                statusText.textContent = 'Uploading...';
+                uploadBtn.disabled = true;
+                resultsContainer.style.display = 'none';
+                
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                // Upload file
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    progressBar.style.width = '50%';
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.job_id) {
+                        currentJobId = data.job_id;
+                        statusText.textContent = 'Processing audio...';
+                        
+                        // Start checking job status
+                        checkJobStatus();
+                        statusCheckInterval = setInterval(checkJobStatus, 3000);
+                    } else {
+                        throw new Error('No job ID received');
+                    }
+                })
+                .catch(error => {
+                    statusText.textContent = `Error: ${error.message}`;
+                    statusText.className = 'status error';
+                    progressContainer.style.display = 'none';
+                    loadingSpinner.style.display = 'none';
+                    uploadBtn.disabled = false;
+                });
+            }
+            
+            function checkJobStatus() {
+                if (!currentJobId) return;
+                
+                fetch(`/status/${currentJobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    switch (data.status) {
+                        case 'queued':
+                            statusText.textContent = 'Waiting in queue...';
+                            progressBar.style.width = '60%';
+                            break;
+                        case 'processing':
+                            statusText.textContent = 'Separating audio stems...';
+                            progressBar.style.width = '75%';
+                            break;
+                        case 'completed':
+                            clearInterval(statusCheckInterval);
+                            progressBar.style.width = '100%';
+                            loadingSpinner.style.display = 'none';
+                            statusText.textContent = 'Processing complete!';
+                            uploadBtn.disabled = false;
+                            
+                            // Display results
+                            displayResults(data.results);
+                            break;
+                        case 'failed':
+                            clearInterval(statusCheckInterval);
+                            statusText.textContent = `Processing failed: ${data.error || 'Unknown error'}`;
+                            statusText.className = 'status error';
+                            loadingSpinner.style.display = 'none';
+                            uploadBtn.disabled = false;
+                            break;
+                    }
+                })
+                .catch(error => {
+                    clearInterval(statusCheckInterval);
+                    statusText.textContent = `Error checking status: ${error.message}`;
+                    statusText.className = 'status error';
+                    loadingSpinner.style.display = 'none';
+                    uploadBtn.disabled = false;
+                });
+            }
+            
+            function displayResults(results) {
+                stemsContainer.innerHTML = '';
+                
+                // Create elements for each stem
+                const stemOrder = ['vocals', 'drums', 'bass', 'other']; // Preferred order
+                const stemIcons = {
+                    'vocals': '🎤',
+                    'drums': '🥁',
+                    'bass': '🎸',
+                    'other': '🎹'
+                };
+                
+                stemOrder.forEach(stemName => {
+                    if (results[stemName]) {
+                        const stemUrl = results[stemName];
+                        
+                        // Create stem element
+                        const stemEl = document.createElement('div');
+                        stemEl.className = 'stem';
+                        stemEl.innerHTML = `
+                            <div class="icon">${stemIcons[stemName] || '🎵'}</div>
+                            <h3>${stemName.charAt(0).toUpperCase() + stemName.slice(1)}</h3>
+                            <audio controls src="${stemUrl}"></audio>
+                            <a href="${stemUrl}" class="download-btn" download="${stemName}.wav">Download</a>
+                        `;
+                        
+                        stemsContainer.appendChild(stemEl);
+                    }
+                });
+                
+                resultsContainer.style.display = 'block';
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        });
+    </script>
+</body>
+</html>
