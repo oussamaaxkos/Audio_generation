@@ -1,2 +1,5 @@
-/demucs-env
-/dmucs-env
+# Ignore Python virtual environments
+env1/
+env2/
+
+
